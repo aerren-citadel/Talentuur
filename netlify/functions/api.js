@@ -126,14 +126,11 @@ exports.handler = async (event) => {
     if (method === "POST" && path === "/student/choices") {
       const body = getBody(event);
       const studentNumber = norm(body.studentNumber);
-      const firstName = norm(body.firstName);
-      const lastName = norm(body.lastName);
-      const className = norm(body.className);
       const periodId = Number(body.periodId);
       const choices = Array.isArray(body.choices) ? body.choices.map(norm) : [];
 
-      if (!studentNumber || !firstName || !lastName || !className || !periodId) {
-        return json(400, { error: "Vul leerlingnummer, naam, klas en periode in." });
+      if (!studentNumber || !periodId) {
+        return json(400, { error: "Vul leerlingnummer en periode in." });
       }
 
       if (choices.length !== 4 || new Set(choices).size !== 4 || choices.some((c) => !c)) {
@@ -168,12 +165,12 @@ exports.handler = async (event) => {
         VALUES ($1, $2, $3, $4)
         ON CONFLICT (student_number)
         DO UPDATE SET
-          first_name = EXCLUDED.first_name,
-          last_name = EXCLUDED.last_name,
-          class_name = EXCLUDED.class_name
+          first_name = '',
+          last_name = '',
+          class_name = ''
         RETURNING id
         `,
-        [studentNumber, firstName, lastName, className]
+        [studentNumber, "", "", ""]
       );
       const studentId = upsert.rows[0].id;
 
@@ -210,9 +207,6 @@ exports.handler = async (event) => {
         `
         SELECT
           s.student_number,
-          s.first_name,
-          s.last_name,
-          s.class_name,
           MAX(CASE WHEN c.choice_rank = 1 THEN t1.label END) AS choice1,
           MAX(CASE WHEN c.choice_rank = 2 THEN t1.label END) AS choice2,
           MAX(CASE WHEN c.choice_rank = 3 THEN t1.label END) AS choice3,
@@ -224,8 +218,8 @@ exports.handler = async (event) => {
         LEFT JOIN talents t1 ON t1.code = c.talent_code
         LEFT JOIN assignments a ON a.student_id = s.id AND a.period_id = $1
         LEFT JOIN talents t2 ON t2.code = a.assigned_talent_code
-        GROUP BY s.id, s.student_number, s.first_name, s.last_name, s.class_name, a.assigned_talent_code, t2.label
-        ORDER BY s.class_name, s.last_name, s.first_name
+        GROUP BY s.id, s.student_number, a.assigned_talent_code, t2.label
+        ORDER BY s.student_number
         `,
         [periodId]
       );

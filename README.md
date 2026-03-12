@@ -1,6 +1,6 @@
 # Talentuur Keuze-app (Netlify + Neon)
 
-Deze app laat leerlingen 4 voorkeuren kiezen voor een talentuur-periode en helpt de talentuurcoördinator met:
+Deze app laat leerlingen met alleen hun leerlingnummer 4 voorkeuren kiezen voor een talentuur-periode en helpt de talentuurcoördinator met:
 
 - blokkeren van dubbele keuzes als een leerling dat talentuur al heeft gevolgd (uitzondering: sportoriëntatie),
 - overzicht van alle keuzes per periode,
@@ -51,3 +51,4 @@ Pagina's:
 - Je kunt per periode zelf bepalen welke talenturen beschikbaar zijn via de admin-pagina.
 - Als talenturen in een volgende periode wijzigen, pas je alleen die periode aan.
 - Keuzes van leerlingen zijn 1e t/m 4e keuze; je krijgt overzicht in tabel + CSV export.
+- De invoer werkt op leerlingnummer (geen naamvelden in het formulier of overzicht).

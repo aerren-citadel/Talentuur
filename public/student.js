@@ -84,9 +84,6 @@ els.form.addEventListener("submit", async (e) => {
 
   const payload = {
     studentNumber: els.form.studentNumber.value.trim(),
-    firstName: els.form.firstName.value.trim(),
-    lastName: els.form.lastName.value.trim(),
-    className: els.form.className.value.trim(),
     periodId: Number(els.form.periodId.value),
     choices: getChoiceValues()
   };

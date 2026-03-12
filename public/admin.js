@@ -133,8 +133,6 @@ const renderOverview = () => {
 
     tr.innerHTML = `
       <td>${row.student_number}</td>
-      <td>${row.first_name} ${row.last_name}</td>
-      <td>${row.class_name}</td>
       <td>${row.choice1 || ""}</td>
       <td>${row.choice2 || ""}</td>
       <td>${row.choice3 || ""}</td>
@@ -166,14 +164,11 @@ const downloadCsv = () => {
     return;
   }
 
-  const header = ["Leerlingnr", "Voornaam", "Achternaam", "Klas", "1e", "2e", "3e", "4e", "Toegewezen"];
+  const header = ["Leerlingnr", "1e", "2e", "3e", "4e", "Toegewezen"];
   const lines = [header.join(";")];
   overviewRows.forEach((r) => {
     const values = [
       r.student_number,
-      r.first_name,
-      r.last_name,
-      r.class_name,
       r.choice1 || "",
       r.choice2 || "",
       r.choice3 || "",
