@@ -21,6 +21,23 @@ body {
   color: var(--text);
 }
 
+.topbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 24px 0;
+}
+
+.topbar a {
+  display: inline-block;
+  background: #ffffff;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 8px 14px;
+}
+
 .container {
   max-width: 1000px;
   margin: 0 auto;
@@ -129,4 +146,8 @@ th {
 .hint {
   font-size: 0.84rem;
   color: var(--muted);
+}
+
+.hidden {
+  display: none;
 }

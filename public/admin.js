@@ -1,5 +1,8 @@
 const els = {
   adminToken: document.getElementById("adminToken"),
+  roleHint: document.getElementById("roleHint"),
+  periodManagementSection: document.getElementById("periodManagementSection"),
+  actionHeader: document.getElementById("actionHeader"),
   periodSelect: document.getElementById("periodSelect"),
   periodName: document.getElementById("periodName"),
   schoolYear: document.getElementById("schoolYear"),
@@ -18,6 +21,7 @@ const els = {
 let periods = [];
 let talents = [];
 let overviewRows = [];
+let currentRole = null;
 
 const setStatus = (message, type = "") => {
   els.status.textContent = message;
@@ -34,6 +38,42 @@ const fetchJSON = async (url, init = {}) => {
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Onbekende fout");
   return data;
+};
+
+const canEdit = () => currentRole === "admin";
+
+const applyRoleUI = () => {
+  if (!currentRole) {
+    els.roleHint.textContent = "Voer een geldig token in.";
+    els.periodManagementSection.classList.remove("hidden");
+    els.loadOverview.disabled = false;
+    els.exportCsv.disabled = false;
+    els.actionHeader.classList.remove("hidden");
+    return;
+  }
+
+  if (currentRole === "admin") {
+    els.roleHint.textContent = "Ingelogd als admin (volledige rechten).";
+    els.periodManagementSection.classList.remove("hidden");
+    els.savePeriod.disabled = false;
+    els.actionHeader.classList.remove("hidden");
+    return;
+  }
+
+  els.roleHint.textContent = "Ingelogd met ROOSTER_TOKEN (alleen overzicht + CSV).";
+  els.periodManagementSection.classList.add("hidden");
+  els.actionHeader.classList.add("hidden");
+};
+
+const verifyRole = async () => {
+  try {
+    const { role } = await fetchJSON("/api/admin/session");
+    currentRole = role;
+    applyRoleUI();
+  } catch {
+    currentRole = null;
+    applyRoleUI();
+  }
 };
 
 const renderPeriodSelect = () => {
@@ -104,6 +144,7 @@ const loadData = async () => {
 };
 
 const savePeriod = async () => {
+  if (!canEdit()) throw new Error("Alleen admin mag periodes beheren.");
   const payload = {
     id: Number(els.periodSelect.value || 0),
     name: els.periodName.value.trim(),
@@ -138,12 +179,12 @@ const renderOverview = () => {
       <td>${row.choice3 || ""}</td>
       <td>${row.choice4 || ""}</td>
       <td>
-        <select data-role="assigned" data-student="${row.student_number}">
+        <select data-role="assigned" data-student="${row.student_number}" ${canEdit() ? "" : "disabled"}>
           <option value="">Kies...</option>
           ${assignedOptions}
         </select>
       </td>
-      <td><button type="button" data-role="save-assignment" data-student="${row.student_number}">Opslaan</button></td>
+      <td class="${canEdit() ? "" : "hidden"}"><button type="button" data-role="save-assignment" data-student="${row.student_number}">Opslaan</button></td>
     `;
     els.overviewTableBody.appendChild(tr);
   });
@@ -187,6 +228,7 @@ const downloadCsv = () => {
 };
 
 const saveAssignment = async (studentNumber, assignedTalentCode) => {
+  if (!canEdit()) throw new Error("Alleen admin mag indelingen wijzigen.");
   const periodId = Number(els.periodSelect.value);
   if (!periodId) throw new Error("Kies eerst een periode.");
   if (!assignedTalentCode) throw new Error("Kies een talentuur om toe te wijzen.");
@@ -206,7 +248,10 @@ const saveAssignment = async (studentNumber, assignedTalentCode) => {
 };
 
 els.adminToken.value = localStorage.getItem("adminToken") || "";
-els.adminToken.addEventListener("change", () => localStorage.setItem("adminToken", els.adminToken.value.trim()));
+els.adminToken.addEventListener("change", async () => {
+  localStorage.setItem("adminToken", els.adminToken.value.trim());
+  await verifyRole();
+});
 els.periodSelect.addEventListener("change", loadPeriodIntoForm);
 els.newPeriod.addEventListener("click", () => {
   els.periodSelect.value = "";
@@ -242,4 +287,9 @@ els.overviewTableBody.addEventListener("click", async (e) => {
   }
 });
 
-loadData().catch((error) => setStatus(error.message, "error"));
+const init = async () => {
+  await verifyRole();
+  await loadData();
+};
+
+init().catch((error) => setStatus(error.message, "error"));

@@ -24,6 +24,7 @@ Voorbeeld:
 ```env
 DATABASE_URL=postgresql://USER:PASSWORD@HOST/DB?sslmode=require
 ADMIN_TOKEN=een_lang_geheim_token
+ROOSTER_TOKEN=een_tweede_geheim_token_voor_read_only
 ```
 
 ## 3. Lokaal starten
@@ -44,6 +45,7 @@ Pagina's:
 - Zet environment variables:
   - `DATABASE_URL`
   - `ADMIN_TOKEN`
+  - `ROOSTER_TOKEN`
 - Netlify gebruikt `netlify.toml` automatisch.
 
 ## 5. Belangrijk voor jouw situatie

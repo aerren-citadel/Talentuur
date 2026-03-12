@@ -19,9 +19,12 @@ const getBody = (event) => {
   }
 };
 
-const isAdmin = (event) => {
+const getAdminRole = (event) => {
   const token = event.headers["x-admin-token"] || event.headers["X-Admin-Token"];
-  return token && process.env.ADMIN_TOKEN && token === process.env.ADMIN_TOKEN;
+  if (!token) return null;
+  if (process.env.ADMIN_TOKEN && token === process.env.ADMIN_TOKEN) return "admin";
+  if (process.env.ROOSTER_TOKEN && token === process.env.ROOSTER_TOKEN) return "rooster";
+  return null;
 };
 
 const norm = (value) => String(value || "").trim();
@@ -81,11 +84,18 @@ exports.handler = async (event) => {
       return json(200, { periods: rows });
     }
 
+    if (method === "GET" && path === "/admin/session") {
+      const role = getAdminRole(event);
+      if (!role) return json(401, { error: "Niet geautoriseerd." });
+      return json(200, { role });
+    }
+
     if (method === "GET" && path === "/student/options") {
       const studentNumber = norm(event.queryStringParameters?.studentNumber);
+      const className = norm(event.queryStringParameters?.className);
       const periodId = Number(event.queryStringParameters?.periodId);
-      if (!studentNumber || !periodId) {
-        return json(400, { error: "studentNumber en periodId zijn verplicht." });
+      if (!studentNumber || !className || !periodId) {
+        return json(400, { error: "studentNumber, className en periodId zijn verplicht." });
       }
 
       const { rows: periodRows } = await client.query(
@@ -96,9 +106,12 @@ exports.handler = async (event) => {
       const period = periodRows[0];
 
       const { rows: students } = await client.query(
-        "SELECT id FROM students WHERE student_number = $1",
+        "SELECT id, class_name FROM students WHERE student_number = $1",
         [studentNumber]
       );
+      if (students.length && students[0].class_name && students[0].class_name !== className) {
+        return json(403, { error: "Leerlingnummer en klas komen niet overeen." });
+      }
 
       const { rows: allTalents, map } = await getTalentsMap(client);
       const allowedCodes = new Set(period.available_talents || []);
@@ -126,11 +139,12 @@ exports.handler = async (event) => {
     if (method === "POST" && path === "/student/choices") {
       const body = getBody(event);
       const studentNumber = norm(body.studentNumber);
+      const className = norm(body.className);
       const periodId = Number(body.periodId);
       const choices = Array.isArray(body.choices) ? body.choices.map(norm) : [];
 
-      if (!studentNumber || !periodId) {
-        return json(400, { error: "Vul leerlingnummer en periode in." });
+      if (!studentNumber || !className || !periodId) {
+        return json(400, { error: "Vul leerlingnummer, klas en periode in." });
       }
 
       if (choices.length !== 4 || new Set(choices).size !== 4 || choices.some((c) => !c)) {
@@ -167,10 +181,10 @@ exports.handler = async (event) => {
         DO UPDATE SET
           first_name = '',
           last_name = '',
-          class_name = ''
+          class_name = EXCLUDED.class_name
         RETURNING id
         `,
-        [studentNumber, "", "", ""]
+        [studentNumber, "", "", className]
       );
       const studentId = upsert.rows[0].id;
 
@@ -199,7 +213,8 @@ exports.handler = async (event) => {
     }
 
     if (method === "GET" && path === "/admin/overview") {
-      if (!isAdmin(event)) return json(401, { error: "Niet geautoriseerd." });
+      const role = getAdminRole(event);
+      if (!role) return json(401, { error: "Niet geautoriseerd." });
       const periodId = Number(event.queryStringParameters?.periodId);
       if (!periodId) return json(400, { error: "periodId is verplicht." });
 
@@ -228,7 +243,9 @@ exports.handler = async (event) => {
     }
 
     if (method === "POST" && path === "/admin/assign") {
-      if (!isAdmin(event)) return json(401, { error: "Niet geautoriseerd." });
+      const role = getAdminRole(event);
+      if (!role) return json(401, { error: "Niet geautoriseerd." });
+      if (role !== "admin") return json(403, { error: "Alleen admin mag indelingen wijzigen." });
       const body = getBody(event);
       const studentNumber = norm(body.studentNumber);
       const assignedTalentCode = norm(body.assignedTalentCode);
@@ -281,7 +298,9 @@ exports.handler = async (event) => {
     }
 
     if (method === "POST" && path === "/admin/periods") {
-      if (!isAdmin(event)) return json(401, { error: "Niet geautoriseerd." });
+      const role = getAdminRole(event);
+      if (!role) return json(401, { error: "Niet geautoriseerd." });
+      if (role !== "admin") return json(403, { error: "Alleen admin mag periodes beheren." });
       const body = getBody(event);
       const id = Number(body.id || 0);
       const name = norm(body.name);

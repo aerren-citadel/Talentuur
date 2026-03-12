@@ -17,13 +17,14 @@
         <h2>Beveiliging</h2>
         <div class="row">
           <div>
-            <label for="adminToken">Admin token</label>
-            <input id="adminToken" type="password" placeholder="x-admin-token" />
+            <label for="adminToken">Token</label>
+            <input id="adminToken" type="password" placeholder="ADMIN_TOKEN of ROOSTER_TOKEN" />
           </div>
         </div>
+        <p id="roleHint" class="hint" style="margin-top: 8px"></p>
       </section>
 
-      <section class="card">
+      <section id="periodManagementSection" class="card">
         <h2>Periode beheren</h2>
         <div class="row">
           <div>
@@ -88,7 +89,7 @@
                 <th>3e keuze</th>
                 <th>4e keuze</th>
                 <th>Toegewezen</th>
-                <th>Actie</th>
+                <th id="actionHeader">Actie</th>
               </tr>
             </thead>
             <tbody></tbody>

@@ -7,24 +7,37 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
+    <div class="topbar">
+      <a href="/admin.html">Admin login</a>
+    </div>
     <main class="container">
       <section class="card">
         <h1>Talentuur keuzeformulier</h1>
-        <p class="muted">
-          Vul alleen je leerlingnummer in en kies 4 voorkeuren. Talenturen die je al hebt gevolgd worden automatisch
-          geblokkeerd (behalve sportoriëntatie).
-        </p>
+        <p class="muted">Log in met leerlingnummer en klas. Daarna kun je 4 voorkeuren invullen.</p>
       </section>
 
-      <section class="card">
-        <form id="student-form">
+      <section id="login-section" class="card">
+        <form id="login-form">
           <div class="row">
             <div>
-              <label for="studentNumber">Leerlingnummer</label>
-              <input id="studentNumber" name="studentNumber" required />
+              <label for="loginStudentNumber">Leerlingnummer</label>
+              <input id="loginStudentNumber" name="studentNumber" required />
+            </div>
+            <div>
+              <label for="loginClassName">Klas</label>
+              <input id="loginClassName" name="className" required />
             </div>
           </div>
+          <div class="actions" style="margin-top: 12px">
+            <button type="submit">Inloggen</button>
+          </div>
+          <div id="login-status" class="status"></div>
+        </form>
+      </section>
 
+      <section id="choice-section" class="card hidden">
+        <p class="hint" id="session-label"></p>
+        <form id="student-form">
           <div class="row" style="margin-top: 12px">
             <div>
               <label for="periodId">Periode</label>
@@ -50,13 +63,10 @@
 
           <div class="actions" style="margin-top: 12px">
             <button type="submit">Opslaan</button>
+            <button id="logout-btn" type="button" class="secondary">Uitloggen</button>
           </div>
           <div id="status" class="status"></div>
         </form>
-      </section>
-
-      <section class="card">
-        <p class="hint">Coördinator? Ga naar <a href="/admin.html">/admin.html</a></p>
       </section>
     </main>
     <script src="/student.js"></script>
