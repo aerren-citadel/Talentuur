@@ -1,0 +1,16 @@
+{
+  "name": "talentuur-keuze-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Talentuur keuze- en indelingsapp voor Netlify + Neon",
+  "scripts": {
+    "dev": "netlify dev",
+    "start": "netlify dev"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.38.1"
+  }
+}

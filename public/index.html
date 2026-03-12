@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Talentuur Keuze</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <section class="card">
+        <h1>Talentuur keuzeformulier</h1>
+        <p class="muted">
+          Vul je gegevens in en kies 4 voorkeuren. Talenturen die je al hebt gevolgd worden automatisch geblokkeerd
+          (behalve sportoriëntatie).
+        </p>
+      </section>
+
+      <section class="card">
+        <form id="student-form">
+          <div class="row">
+            <div>
+              <label for="studentNumber">Leerlingnummer</label>
+              <input id="studentNumber" name="studentNumber" required />
+            </div>
+            <div>
+              <label for="firstName">Voornaam</label>
+              <input id="firstName" name="firstName" required />
+            </div>
+            <div>
+              <label for="lastName">Achternaam</label>
+              <input id="lastName" name="lastName" required />
+            </div>
+            <div>
+              <label for="className">Klas</label>
+              <input id="className" name="className" required />
+            </div>
+          </div>
+
+          <div class="row" style="margin-top: 12px">
+            <div>
+              <label for="periodId">Periode</label>
+              <select id="periodId" name="periodId" required></select>
+            </div>
+            <div>
+              <label for="choice1">1e keuze</label>
+              <select id="choice1" name="choice1" required></select>
+            </div>
+            <div>
+              <label for="choice2">2e keuze</label>
+              <select id="choice2" name="choice2" required></select>
+            </div>
+            <div>
+              <label for="choice3">3e keuze</label>
+              <select id="choice3" name="choice3" required></select>
+            </div>
+            <div>
+              <label for="choice4">4e keuze</label>
+              <select id="choice4" name="choice4" required></select>
+            </div>
+          </div>
+
+          <div class="actions" style="margin-top: 12px">
+            <button type="submit">Opslaan</button>
+          </div>
+          <div id="status" class="status"></div>
+        </form>
+      </section>
+
+      <section class="card">
+        <p class="hint">Coördinator? Ga naar <a href="/admin.html">/admin.html</a></p>
+      </section>
+    </main>
+    <script src="/student.js"></script>
+  </body>
+</html>
