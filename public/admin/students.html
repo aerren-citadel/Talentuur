@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Leerlingen</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <section class="card">
+        <h1>Leerlingen</h1>
+        <p class="muted"><a href="/admin.html">Terug naar admin start</a></p>
+      </section>
+      <section class="card">
+        <label for="adminToken">Token</label>
+        <input id="adminToken" type="password" />
+        <div id="roleHint" class="status"></div>
+      </section>
+      <section class="card">
+        <h2>Toevoegen / wijzigen</h2>
+        <form id="studentForm" class="row">
+          <div>
+            <label for="studentNumber">Leerlingnummer</label>
+            <input id="studentNumber" required />
+          </div>
+          <div>
+            <label for="className">Klas</label>
+            <input id="className" required />
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button type="submit">Opslaan</button>
+          </div>
+        </form>
+      </section>
+      <section class="card">
+        <h2>Overzicht</h2>
+        <div class="row">
+          <div>
+            <label for="filterClass">Filter klas</label>
+            <input id="filterClass" placeholder="bijv. 1a1" />
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button id="reloadBtn" type="button">Herladen</button>
+          </div>
+        </div>
+        <div id="status" class="status"></div>
+        <div style="overflow-x: auto; margin-top: 12px">
+          <table>
+            <thead>
+              <tr>
+                <th>Leerlingnummer</th>
+                <th>Klas</th>
+                <th>Actie</th>
+              </tr>
+            </thead>
+            <tbody id="studentsBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <script src="/admin/common.js"></script>
+    <script src="/admin/students.js"></script>
+  </body>
+</html>

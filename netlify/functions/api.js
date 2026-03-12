@@ -51,6 +51,14 @@ const getTalentsMap = async (client) => {
   return { rows, map };
 };
 
+const isPeriodOpenNow = (period) => {
+  if (!period.is_open) return false;
+  const now = Date.now();
+  if (period.open_at && now < new Date(period.open_at).getTime()) return false;
+  if (period.close_at && now > new Date(period.close_at).getTime()) return false;
+  return true;
+};
+
 const getPath = (event) => {
   const full = event.path || "";
   const idx = full.indexOf("/api/");
@@ -79,9 +87,10 @@ exports.handler = async (event) => {
 
     if (method === "GET" && path === "/periods") {
       const { rows } = await client.query(
-        "SELECT id, name, school_year, year_level, period_number, is_open, available_talents FROM periods ORDER BY school_year, year_level, period_number"
+        "SELECT id, name, school_year, year_level, period_number, is_open, open_at, close_at, available_talents FROM periods ORDER BY school_year, year_level, period_number"
       );
-      return json(200, { periods: rows });
+      const periods = rows.map((p) => ({ ...p, is_open_now: isPeriodOpenNow(p) }));
+      return json(200, { periods });
     }
 
     if (method === "GET" && path === "/admin/session") {
@@ -99,11 +108,14 @@ exports.handler = async (event) => {
       }
 
       const { rows: periodRows } = await client.query(
-        "SELECT id, available_talents FROM periods WHERE id = $1",
+        "SELECT id, is_open, open_at, close_at, available_talents FROM periods WHERE id = $1",
         [periodId]
       );
       if (!periodRows.length) return json(404, { error: "Periode niet gevonden." });
       const period = periodRows[0];
+      if (!isPeriodOpenNow(period)) {
+        return json(400, { error: "Deze periode is (nog) niet open voor inschrijving." });
+      }
 
       const { rows: students } = await client.query(
         "SELECT id, class_name FROM students WHERE student_number = $1",
@@ -119,6 +131,23 @@ exports.handler = async (event) => {
       let taken = new Set();
       if (students.length) {
         taken = await getStudentTakenTalents(client, students[0].id, periodId);
+        const { rows: assignedRows } = await client.query(
+          `
+          SELECT a.assigned_talent_code, t.label
+          FROM assignments a
+          LEFT JOIN talents t ON t.code = a.assigned_talent_code
+          WHERE a.student_id = $1 AND a.period_id = $2
+          `,
+          [students[0].id, periodId]
+        );
+        if (assignedRows.length) {
+          return json(200, {
+            locked: true,
+            assignedTalentCode: assignedRows[0].assigned_talent_code,
+            assignedLabel: assignedRows[0].label || assignedRows[0].assigned_talent_code,
+            options: []
+          });
+        }
       }
 
       const options = allTalents
@@ -133,7 +162,7 @@ exports.handler = async (event) => {
           };
         });
 
-      return json(200, { options });
+      return json(200, { locked: false, options });
     }
 
     if (method === "POST" && path === "/student/choices") {
@@ -153,7 +182,7 @@ exports.handler = async (event) => {
 
       await client.query("BEGIN");
       const { rows: periodRows } = await client.query(
-        "SELECT id, available_talents, is_open FROM periods WHERE id = $1 FOR UPDATE",
+        "SELECT id, available_talents, is_open, open_at, close_at FROM periods WHERE id = $1 FOR UPDATE",
         [periodId]
       );
       if (!periodRows.length) {
@@ -161,7 +190,7 @@ exports.handler = async (event) => {
         return json(404, { error: "Periode niet gevonden." });
       }
       const period = periodRows[0];
-      if (!period.is_open) {
+      if (!isPeriodOpenNow(period)) {
         await client.query("ROLLBACK");
         return json(400, { error: "Deze periode is gesloten voor inschrijving." });
       }
@@ -187,6 +216,14 @@ exports.handler = async (event) => {
         [studentNumber, "", "", className]
       );
       const studentId = upsert.rows[0].id;
+      const { rows: lockedRows } = await client.query(
+        "SELECT 1 FROM assignments WHERE student_id = $1 AND period_id = $2",
+        [studentId, periodId]
+      );
+      if (lockedRows.length) {
+        await client.query("ROLLBACK");
+        return json(400, { error: "Je bent al handmatig ingedeeld voor deze periode en kunt geen keuzes meer invullen." });
+      }
 
       const taken = await getStudentTakenTalents(client, studentId, periodId);
       for (const code of choices) {
@@ -222,6 +259,7 @@ exports.handler = async (event) => {
         `
         SELECT
           s.student_number,
+          s.class_name,
           MAX(CASE WHEN c.choice_rank = 1 THEN t1.label END) AS choice1,
           MAX(CASE WHEN c.choice_rank = 2 THEN t1.label END) AS choice2,
           MAX(CASE WHEN c.choice_rank = 3 THEN t1.label END) AS choice3,
@@ -229,12 +267,12 @@ exports.handler = async (event) => {
           a.assigned_talent_code,
           t2.label AS assigned_label
         FROM students s
-        JOIN choices c ON c.student_id = s.id AND c.period_id = $1
+        LEFT JOIN choices c ON c.student_id = s.id AND c.period_id = $1
         LEFT JOIN talents t1 ON t1.code = c.talent_code
         LEFT JOIN assignments a ON a.student_id = s.id AND a.period_id = $1
         LEFT JOIN talents t2 ON t2.code = a.assigned_talent_code
-        GROUP BY s.id, s.student_number, a.assigned_talent_code, t2.label
-        ORDER BY s.student_number
+        GROUP BY s.id, s.student_number, s.class_name, a.assigned_talent_code, t2.label
+        ORDER BY s.class_name, s.student_number
         `,
         [periodId]
       );
@@ -297,6 +335,105 @@ exports.handler = async (event) => {
       return json(200, { ok: true });
     }
 
+    if (method === "GET" && path === "/admin/students") {
+      const role = getAdminRole(event);
+      if (!role) return json(401, { error: "Niet geautoriseerd." });
+      const className = norm(event.queryStringParameters?.className);
+      const sortBy = norm(event.queryStringParameters?.sortBy || "student_number");
+      const allowedSort = new Set(["student_number", "class_name", "created_at"]);
+      const orderBy = allowedSort.has(sortBy) ? sortBy : "student_number";
+      const params = [];
+      let where = "";
+      if (className) {
+        params.push(className);
+        where = "WHERE class_name = $1";
+      }
+      const { rows } = await client.query(
+        `
+        SELECT id, student_number, class_name, created_at
+        FROM students
+        ${where}
+        ORDER BY ${orderBy}, student_number
+        `,
+        params
+      );
+      return json(200, { rows });
+    }
+
+    if (method === "POST" && path === "/admin/students") {
+      const role = getAdminRole(event);
+      if (!role) return json(401, { error: "Niet geautoriseerd." });
+      if (role !== "admin") return json(403, { error: "Alleen admin mag leerlingen wijzigen." });
+      const body = getBody(event);
+      const studentNumber = norm(body.studentNumber);
+      const className = norm(body.className);
+      if (!studentNumber || !className) return json(400, { error: "studentNumber en className zijn verplicht." });
+      await client.query(
+        `
+        INSERT INTO students (student_number, first_name, last_name, class_name)
+        VALUES ($1, '', '', $2)
+        ON CONFLICT (student_number)
+        DO UPDATE SET class_name = EXCLUDED.class_name
+        `,
+        [studentNumber, className]
+      );
+      return json(200, { ok: true });
+    }
+
+    if (method === "DELETE" && path === "/admin/students") {
+      const role = getAdminRole(event);
+      if (!role) return json(401, { error: "Niet geautoriseerd." });
+      if (role !== "admin") return json(403, { error: "Alleen admin mag leerlingen verwijderen." });
+      const studentNumber = norm(event.queryStringParameters?.studentNumber);
+      if (!studentNumber) return json(400, { error: "studentNumber is verplicht." });
+      await client.query("DELETE FROM students WHERE student_number = $1", [studentNumber]);
+      return json(200, { ok: true });
+    }
+
+    if (method === "GET" && path === "/admin/talents") {
+      const role = getAdminRole(event);
+      if (!role) return json(401, { error: "Niet geautoriseerd." });
+      const { rows } = await getTalentsMap(client);
+      return json(200, { rows });
+    }
+
+    if (method === "POST" && path === "/admin/talents") {
+      const role = getAdminRole(event);
+      if (!role) return json(401, { error: "Niet geautoriseerd." });
+      if (role !== "admin") return json(403, { error: "Alleen admin mag talenturen wijzigen." });
+      const body = getBody(event);
+      const code = norm(body.code).toLowerCase().replace(/\s+/g, "");
+      const label = norm(body.label);
+      const allowRepeat = Boolean(body.allowRepeat);
+      const isActive = Boolean(body.isActive);
+      const sortOrder = Number(body.sortOrder || 0);
+      if (!code || !label) return json(400, { error: "code en label zijn verplicht." });
+      await client.query(
+        `
+        INSERT INTO talents (code, label, allow_repeat, is_active, sort_order)
+        VALUES ($1, $2, $3, $4, $5)
+        ON CONFLICT (code)
+        DO UPDATE SET
+          label = EXCLUDED.label,
+          allow_repeat = EXCLUDED.allow_repeat,
+          is_active = EXCLUDED.is_active,
+          sort_order = EXCLUDED.sort_order
+        `,
+        [code, label, allowRepeat, isActive, sortOrder]
+      );
+      return json(200, { ok: true });
+    }
+
+    if (method === "DELETE" && path === "/admin/talents") {
+      const role = getAdminRole(event);
+      if (!role) return json(401, { error: "Niet geautoriseerd." });
+      if (role !== "admin") return json(403, { error: "Alleen admin mag talenturen verwijderen." });
+      const code = norm(event.queryStringParameters?.code);
+      if (!code) return json(400, { error: "code is verplicht." });
+      await client.query("UPDATE talents SET is_active = FALSE WHERE code = $1", [code]);
+      return json(200, { ok: true });
+    }
+
     if (method === "POST" && path === "/admin/periods") {
       const role = getAdminRole(event);
       if (!role) return json(401, { error: "Niet geautoriseerd." });
@@ -308,6 +445,8 @@ exports.handler = async (event) => {
       const yearLevel = Number(body.yearLevel);
       const periodNumber = Number(body.periodNumber);
       const isOpen = Boolean(body.isOpen);
+      const openAt = body.openAt ? new Date(body.openAt).toISOString() : null;
+      const closeAt = body.closeAt ? new Date(body.closeAt).toISOString() : null;
       const availableTalents = Array.isArray(body.availableTalents)
         ? body.availableTalents.map(norm).filter(Boolean)
         : [];
@@ -325,22 +464,37 @@ exports.handler = async (event) => {
               year_level = $3,
               period_number = $4,
               is_open = $5,
-              available_talents = $6
-          WHERE id = $7
+              available_talents = $6,
+              open_at = $7,
+              close_at = $8
+          WHERE id = $9
           `,
-          [name, schoolYear, yearLevel, periodNumber, isOpen, availableTalents, id]
+          [name, schoolYear, yearLevel, periodNumber, isOpen, availableTalents, openAt, closeAt, id]
         );
       } else {
         await client.query(
           `
-          INSERT INTO periods (name, school_year, year_level, period_number, is_open, available_talents)
-          VALUES ($1, $2, $3, $4, $5, $6)
+          INSERT INTO periods (name, school_year, year_level, period_number, is_open, available_talents, open_at, close_at)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
           `,
-          [name, schoolYear, yearLevel, periodNumber, isOpen, availableTalents]
+          [name, schoolYear, yearLevel, periodNumber, isOpen, availableTalents, openAt, closeAt]
         );
       }
 
       return json(200, { ok: true });
+    }
+
+    if (method === "GET" && path === "/admin/periods") {
+      const role = getAdminRole(event);
+      if (!role) return json(401, { error: "Niet geautoriseerd." });
+      const { rows } = await client.query(
+        `
+        SELECT id, name, school_year, year_level, period_number, is_open, open_at, close_at, available_talents
+        FROM periods
+        ORDER BY school_year, year_level, period_number
+        `
+      );
+      return json(200, { rows: rows.map((p) => ({ ...p, is_open_now: isPeriodOpenNow(p) })) });
     }
 
     return json(404, { error: "Endpoint niet gevonden." });

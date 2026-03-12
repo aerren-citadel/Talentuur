@@ -57,7 +57,7 @@ const buildOptions = (selectedValues = []) => {
 
 const renderPeriods = async () => {
   const { periods } = await fetchJSON("/api/periods");
-  const openPeriods = periods.filter((p) => p.is_open);
+  const openPeriods = periods.filter((p) => p.is_open_now);
   els.periodId.innerHTML = '<option value="">Kies periode...</option>';
   openPeriods.forEach((p) => {
     const option = document.createElement("option");
@@ -73,11 +73,18 @@ const reloadTalentOptions = async () => {
   if (!periodId) return;
 
   try {
-    const { options } = await fetchJSON(
+    const result = await fetchJSON(
       `/api/student/options?studentNumber=${encodeURIComponent(session.studentNumber)}&className=${encodeURIComponent(session.className)}&periodId=${encodeURIComponent(periodId)}`
     );
-    currentOptions = options;
+    if (result.locked) {
+      currentOptions = [];
+      buildOptions([]);
+      setStatus(`Je bent al ingedeeld in: ${result.assignedLabel}. Je kunt voor deze periode geen keuzes meer invullen.`, "error");
+      return;
+    }
+    currentOptions = result.options;
     buildOptions(getChoiceValues());
+    setStatus("");
   } catch (error) {
     setStatus(error.message, "error");
   }

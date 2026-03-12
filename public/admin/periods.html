@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Periodes</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <section class="card">
+        <h1>Periodes</h1>
+        <p class="muted"><a href="/admin.html">Terug naar admin start</a></p>
+      </section>
+      <section class="card">
+        <label for="adminToken">Token</label>
+        <input id="adminToken" type="password" />
+        <div id="roleHint" class="status"></div>
+      </section>
+      <section class="card">
+        <h2>Aanmaken / wijzigen</h2>
+        <form id="periodForm">
+          <div class="row">
+            <div>
+              <label for="periodId">Bestaande periode</label>
+              <select id="periodId"></select>
+            </div>
+            <div>
+              <label for="name">Naam</label>
+              <input id="name" required />
+            </div>
+            <div>
+              <label for="schoolYear">Schooljaar</label>
+              <input id="schoolYear" placeholder="2026-2027" required />
+            </div>
+            <div>
+              <label for="yearLevel">Leerjaar</label>
+              <select id="yearLevel">
+                <option value="1">1</option>
+                <option value="2">2</option>
+              </select>
+            </div>
+            <div>
+              <label for="periodNumber">Periode</label>
+              <select id="periodNumber">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+              </select>
+            </div>
+            <div>
+              <label for="isOpen">Handmatig open</label>
+              <select id="isOpen">
+                <option value="true">Ja</option>
+                <option value="false">Nee</option>
+              </select>
+            </div>
+            <div>
+              <label for="openAt">Open vanaf</label>
+              <input id="openAt" type="datetime-local" />
+            </div>
+            <div>
+              <label for="closeAt">Sluit op (deadline)</label>
+              <input id="closeAt" type="datetime-local" />
+            </div>
+          </div>
+          <h3 style="margin-top: 12px">Beschikbare talenturen</h3>
+          <div id="talentList" class="row"></div>
+          <div class="actions" style="margin-top: 12px">
+            <button type="submit">Opslaan</button>
+            <button id="newBtn" type="button" class="secondary">Nieuwe periode</button>
+          </div>
+        </form>
+      </section>
+      <section class="card">
+        <h2>Overzicht</h2>
+        <div id="status" class="status"></div>
+        <div style="overflow-x: auto; margin-top: 12px">
+          <table>
+            <thead>
+              <tr>
+                <th>Naam</th>
+                <th>Jaar</th>
+                <th>Periode</th>
+                <th>Open nu</th>
+                <th>Open vanaf</th>
+                <th>Sluit op</th>
+              </tr>
+            </thead>
+            <tbody id="periodsBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <script src="/admin/common.js"></script>
+    <script src="/admin/periods.js"></script>
+  </body>
+</html>

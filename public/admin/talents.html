@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Talenturen</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <section class="card">
+        <h1>Talenturen</h1>
+        <p class="muted"><a href="/admin.html">Terug naar admin start</a></p>
+      </section>
+      <section class="card">
+        <label for="adminToken">Token</label>
+        <input id="adminToken" type="password" />
+        <div id="roleHint" class="status"></div>
+      </section>
+      <section class="card">
+        <h2>Toevoegen / wijzigen</h2>
+        <form id="talentForm" class="row">
+          <div>
+            <label for="code">Code</label>
+            <input id="code" required />
+          </div>
+          <div>
+            <label for="label">Naam</label>
+            <input id="label" required />
+          </div>
+          <div>
+            <label for="sortOrder">Volgorde</label>
+            <input id="sortOrder" type="number" value="0" />
+          </div>
+          <div>
+            <label for="allowRepeat">Herhaalbaar</label>
+            <select id="allowRepeat">
+              <option value="false">Nee</option>
+              <option value="true">Ja</option>
+            </select>
+          </div>
+          <div>
+            <label for="isActive">Actief</label>
+            <select id="isActive">
+              <option value="true">Ja</option>
+              <option value="false">Nee</option>
+            </select>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button type="submit">Opslaan</button>
+          </div>
+        </form>
+      </section>
+      <section class="card">
+        <h2>Lijst</h2>
+        <div id="status" class="status"></div>
+        <div style="overflow-x: auto; margin-top: 12px">
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Naam</th>
+                <th>Actief</th>
+                <th>Herhaalbaar</th>
+                <th>Volgorde</th>
+                <th>Actie</th>
+              </tr>
+            </thead>
+            <tbody id="talentsBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <script src="/admin/common.js"></script>
+    <script src="/admin/talents.js"></script>
+  </body>
+</html>

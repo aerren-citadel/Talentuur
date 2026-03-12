@@ -151,3 +151,14 @@ th {
 .hidden {
   display: none;
 }
+
+.admin-link {
+  display: block;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--text);
+  padding: 14px;
+  font-weight: 600;
+}

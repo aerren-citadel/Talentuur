@@ -18,6 +18,8 @@ npm install
 1. Maak een Neon Postgres database.
 2. Voer `sql/schema.sql` uit.
 3. Zet je connectiestring in `.env` als `DATABASE_URL`.
+4. Voor bestaande leerlingen/historie kun je `sql/import_leerlingen_en_historie.sql` gebruiken.
+5. Voor open/sluit-deadlines op periodes: voer `sql/migration_add_period_deadlines.sql` uit (voor bestaande databases).
 
 Voorbeeld:
 
@@ -36,7 +38,13 @@ npm run dev
 Pagina's:
 
 - leerlingformulier: `/`
-- beheer/coördinator: `/admin.html`
+- admin start: `/admin.html`
+- admin subpagina's:
+  - `/admin/students.html`
+  - `/admin/talents.html`
+  - `/admin/periods.html`
+  - `/admin/choices.html`
+  - `/admin/assignments.html`
 
 ## 4. Deploy op Netlify
 
@@ -54,3 +62,4 @@ Pagina's:
 - Als talenturen in een volgende periode wijzigen, pas je alleen die periode aan.
 - Keuzes van leerlingen zijn 1e t/m 4e keuze; je krijgt overzicht in tabel + CSV export.
 - De invoer werkt op leerlingnummer (geen naamvelden in het formulier of overzicht).
+- Historische import uit je CSV is opgeslagen als ingedeelde uren in `assignments` (niet als leerlingkeuzes in `choices`).

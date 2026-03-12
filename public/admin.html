@@ -9,94 +9,26 @@
   <body>
     <main class="container">
       <section class="card">
-        <h1>Talentuur coördinator</h1>
-        <p class="muted">Hier beheer je periodes, bekijk je keuzes en wijs je leerlingen toe.</p>
+        <h1>Admin omgeving</h1>
+        <p class="muted">Kies hieronder een subpagina voor beheer.</p>
       </section>
 
       <section class="card">
-        <h2>Beveiliging</h2>
-        <div class="row">
-          <div>
-            <label for="adminToken">Token</label>
-            <input id="adminToken" type="password" placeholder="ADMIN_TOKEN of ROOSTER_TOKEN" />
-          </div>
-        </div>
-        <p id="roleHint" class="hint" style="margin-top: 8px"></p>
-      </section>
-
-      <section id="periodManagementSection" class="card">
-        <h2>Periode beheren</h2>
-        <div class="row">
-          <div>
-            <label for="periodSelect">Bestaande periode</label>
-            <select id="periodSelect"></select>
-          </div>
-          <div>
-            <label for="periodName">Naam</label>
-            <input id="periodName" placeholder="Bijv. Jaar 1 - Periode 2" />
-          </div>
-          <div>
-            <label for="schoolYear">Schooljaar</label>
-            <input id="schoolYear" placeholder="2026-2027" />
-          </div>
-          <div>
-            <label for="yearLevel">Leerjaar</label>
-            <select id="yearLevel">
-              <option value="1">1</option>
-              <option value="2">2</option>
-            </select>
-          </div>
-          <div>
-            <label for="periodNumber">Periode (1 t/m 3)</label>
-            <select id="periodNumber">
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-            </select>
-          </div>
-          <div>
-            <label for="isOpen">Open voor inschrijving</label>
-            <select id="isOpen">
-              <option value="true">Ja</option>
-              <option value="false">Nee</option>
-            </select>
-          </div>
-        </div>
-
-        <h3 style="margin-top: 12px">Talenturen in deze periode</h3>
-        <div id="talentCheckboxes" class="row"></div>
-
-        <div class="actions" style="margin-top: 12px">
-          <button id="savePeriod">Periode opslaan</button>
-          <button id="newPeriod" class="secondary" type="button">Nieuwe periode</button>
-        </div>
+        <label for="adminToken">Token (ADMIN_TOKEN of ROOSTER_TOKEN)</label>
+        <input id="adminToken" type="password" placeholder="Plak token hier" />
+        <div id="roleHint" class="status"></div>
       </section>
 
       <section class="card">
-        <h2>Overzicht en indelen</h2>
-        <div class="actions">
-          <button id="loadOverview">Overzicht laden</button>
-          <button id="exportCsv" class="secondary" type="button">Exporteer CSV</button>
-        </div>
-        <div id="status" class="status"></div>
-        <div style="overflow-x: auto; margin-top: 12px">
-          <table id="overviewTable">
-            <thead>
-              <tr>
-                <th>Leerlingnr</th>
-                <th>1e keuze</th>
-                <th>2e keuze</th>
-                <th>3e keuze</th>
-                <th>4e keuze</th>
-                <th>Toegewezen</th>
-                <th id="actionHeader">Actie</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <div class="row">
+          <a class="admin-link" href="/admin/students.html">Leerlingen</a>
+          <a class="admin-link" href="/admin/talents.html">Talenturen</a>
+          <a class="admin-link" href="/admin/periods.html">Periodes</a>
+          <a class="admin-link" href="/admin/choices.html">Keuzes per periode</a>
+          <a class="admin-link" href="/admin/assignments.html">Toewijzingen</a>
         </div>
       </section>
     </main>
-    <script src="/admin.js"></script>
+    <script src="/admin/common.js"></script>
   </body>
 </html>

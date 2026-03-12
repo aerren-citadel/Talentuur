@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS periods (
   year_level INT NOT NULL CHECK (year_level IN (1, 2)),
   period_number INT NOT NULL CHECK (period_number BETWEEN 1 AND 3),
   is_open BOOLEAN NOT NULL DEFAULT TRUE,
+  open_at TIMESTAMPTZ,
+  close_at TIMESTAMPTZ,
   available_talents TEXT[] NOT NULL DEFAULT '{}',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Keuzes</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <section class="card">
+        <h1>Keuzes per periode</h1>
+        <p class="muted"><a href="/admin.html">Terug naar admin start</a></p>
+      </section>
+      <section class="card">
+        <label for="adminToken">Token</label>
+        <input id="adminToken" type="password" />
+        <div id="roleHint" class="status"></div>
+      </section>
+      <section class="card">
+        <div class="row">
+          <div>
+            <label for="periodId">Periode</label>
+            <select id="periodId"></select>
+          </div>
+          <div>
+            <label for="sortBy">Sorteren op</label>
+            <select id="sortBy">
+              <option value="class_name">Klas</option>
+              <option value="student_number">Leerlingnummer</option>
+            </select>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button id="loadBtn" type="button">Laden</button>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button id="csvBtn" type="button" class="secondary">CSV export</button>
+          </div>
+        </div>
+        <div id="status" class="status"></div>
+        <div style="overflow-x: auto; margin-top: 12px">
+          <table>
+            <thead>
+              <tr>
+                <th>Leerlingnummer</th>
+                <th>Klas</th>
+                <th>1e keuze</th>
+                <th>2e keuze</th>
+                <th>3e keuze</th>
+                <th>4e keuze</th>
+                <th>Toegewezen</th>
+              </tr>
+            </thead>
+            <tbody id="choicesBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <script src="/admin/common.js"></script>
+    <script src="/admin/choices.js"></script>
+  </body>
+</html>
