@@ -3,6 +3,7 @@ const { Pool } = require("pg");
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL
 });
+let schemaReady = false;
 
 const json = (statusCode, payload) => ({
   statusCode,
@@ -66,6 +67,13 @@ const getPath = (event) => {
   return full.slice(idx + 4);
 };
 
+const ensureSchema = async (client) => {
+  if (schemaReady) return;
+  await client.query("ALTER TABLE periods ADD COLUMN IF NOT EXISTS open_at TIMESTAMPTZ");
+  await client.query("ALTER TABLE periods ADD COLUMN IF NOT EXISTS close_at TIMESTAMPTZ");
+  schemaReady = true;
+};
+
 exports.handler = async (event) => {
   if (!process.env.DATABASE_URL) {
     return json(500, { error: "DATABASE_URL ontbreekt in environment variables." });
@@ -76,6 +84,8 @@ exports.handler = async (event) => {
   const client = await pool.connect();
 
   try {
+    await ensureSchema(client);
+
     if (method === "GET" && path === "/health") {
       return json(200, { ok: true });
     }
